@@ -14,6 +14,7 @@ class Auth extends StatefulWidget {
   final String userDataBaseName;
   final AssetImage backgroundImageAsset;
   final Widget completeRegisterPage;
+  final Widget homePage;
 
 
   Auth({ Key key,
@@ -24,7 +25,9 @@ class Auth extends StatefulWidget {
     this.googleImage,
     this.facebookImage,
     this.emailImage,
-    this.backgroundImageAsset, this.completeRegisterPage
+    this.backgroundImageAsset,
+    this.completeRegisterPage,
+    this.homePage
   }) : super(key: key);
 
 
@@ -50,6 +53,7 @@ class _SplashPageState extends State<Auth> with TickerProviderStateMixin {
               databaseName: widget.userDataBaseName,
               backgroundImageAsset: widget.backgroundImageAsset,
               container: widget.completeRegisterPage,
+              home: widget.homePage,
             )),)}
       else
         {
@@ -59,7 +63,7 @@ class _SplashPageState extends State<Auth> with TickerProviderStateMixin {
           (value['CompleteRegister'] == true ||
               value['CompleteRegister'] != null) ?
           Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => HomeScreen()),
+            MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.homePage)),
           ) : Navigator.pushReplacement(context,
             MaterialPageRoute(builder: (context) => CompleteRegistration(container:widget.completeRegisterPage,isNumber:false,data:"")),
           )

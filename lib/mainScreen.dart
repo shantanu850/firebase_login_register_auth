@@ -15,7 +15,8 @@ class LoginScreen extends StatefulWidget {
   final String databaseName;
   final AssetImage backgroundImageAsset;
   final Widget container;
-  const LoginScreen({Key key, this.appIcon, this.appName, this.googleImage, this.facebookImage, this.emailImage, this.databaseName, this.backgroundImageAsset, this.container}): super(key: key);
+  final home;
+  const LoginScreen({Key key, this.appIcon, this.appName, this.googleImage, this.facebookImage, this.emailImage, this.databaseName, this.backgroundImageAsset, this.container, this.home}): super(key: key);
   @override
   _LoginScreenState createState() => new _LoginScreenState();
 }
@@ -288,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen>
         Firestore.instance.collection(widget.databaseName).document(value.user.uid).get()
             .then((DocumentSnapshot result) =>
         (result["CompleteRegister"]==true)?
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen())):
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
         Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:true,data:this.phoneNo,container: widget.container)))
         )
       }
@@ -852,7 +853,7 @@ class _LoginScreenState extends State<LoginScreen>
           .then((currentUser) => Firestore.instance.collection(widget.databaseName).document(currentUser.user.uid).get())
           .then((DocumentSnapshot result) =>
       (result["CompleteRegister"]==true)?
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen())):
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
       Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,)))
       );
     } catch (e){
@@ -882,19 +883,6 @@ class _LoginScreenState extends State<LoginScreen>
             )
         )
     );
-  }
-}
-class HomeScreen extends StatefulWidget {
-  final Widget homescreen;
-  const HomeScreen({Key key, this.homescreen}) : super(key: key);
-  @override
-  _HomeScreenState createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  @override
-  Widget build(BuildContext context) {
-    return widget.homescreen;
   }
 }
 class CompleteRegistration extends StatefulWidget {
@@ -1245,5 +1233,20 @@ class _GoogleLoader extends State<GoogleLoder>
 
     controller.dispose();
     super.dispose();
+  }
+}
+class HomeScreenMain extends StatefulWidget {
+  final home;
+  const HomeScreenMain({Key key, this.home}) : super(key: key);
+  @override
+  _HomeScreenMainState createState() => _HomeScreenMainState();
+}
+
+class _HomeScreenMainState extends State<HomeScreenMain> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: widget.home,
+    );
   }
 }
