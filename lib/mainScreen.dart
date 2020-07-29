@@ -1,5 +1,5 @@
 library firebase_login_register;
-//new
+//new 1
 import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -866,6 +866,7 @@ class _LoginScreenState extends State<LoginScreen>
       Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,))))
       );
     }catch(e){
+      print(e.toString());
       final snack = new SnackBar(
         content: new Text(e.message),
         action: null,
