@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends StatefulWidget {
   final Widget appIcon;
@@ -15,8 +16,9 @@ class LoginScreen extends StatefulWidget {
   final String databaseName;
   final AssetImage backgroundImageAsset;
   final Widget container;
+  final onFacebooktap;
   final home;
-  const LoginScreen({Key key, this.appIcon, this.appName, this.googleImage, this.facebookImage, this.emailImage, this.databaseName, this.backgroundImageAsset, this.container, this.home}): super(key: key);
+  const LoginScreen({Key key, this.appIcon, this.appName, this.googleImage, this.facebookImage, this.emailImage, this.databaseName, this.backgroundImageAsset, this.container, this.home, this.onFacebooktap}): super(key: key);
   @override
   _LoginScreenState createState() => new _LoginScreenState();
 }
@@ -233,7 +235,9 @@ class _LoginScreenState extends State<LoginScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children:<Widget>[
                       GestureDetector(
-                        onTap: (){},
+                        onTap: (){
+                          onGoogleTap();
+                        },
                         child: Container(
                           margin: EdgeInsets.all(5),
                           width:width*0.15,
@@ -245,7 +249,9 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                       GestureDetector(
-                        onTap: (){},
+                        onTap: (){
+                          gotoLogin();
+                        },
                         child: Container(
                           margin: EdgeInsets.all(5),
                           width:width*0.15,
@@ -257,7 +263,9 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                       GestureDetector(
-                        onTap: (){},
+                        onTap: (){
+                          widget.onFacebooktap;
+                        },
                         child: Container(
                           margin: EdgeInsets.all(5),
                           width:width*0.15,
@@ -884,6 +892,35 @@ class _LoginScreenState extends State<LoginScreen>
         )
     );
   }
+    Future<String> onGoogleTap() async {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
+      final GoogleSignInAuthentication googleSignInAuthentication =
+      await googleSignInAccount.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.getCredential(
+        accessToken: googleSignInAuthentication.accessToken,
+        idToken: googleSignInAuthentication.idToken,
+      );
+      final AuthResult authResult = await FirebaseAuth.instance.signInWithCredential(credential);
+      final FirebaseUser user = authResult.user;
+      assert(!user.isAnonymous);
+      assert(await user.getIdToken() != null);
+      final FirebaseUser currentUser = await FirebaseAuth.instance.currentUser();
+      assert(user.uid == currentUser.uid);
+      if(authResult.additionalUserInfo.isNewUser){
+        Navigator.pushReplacement(context, MaterialPageRoute(
+            builder: (context) => CompleteRegistration(isNumber:true,data:this.phoneNo,)));
+      }else{
+        Firestore.instance.collection(widget.databaseName).document(user.uid).get()
+            .then((DocumentSnapshot result) =>
+        (result["CompleteRegister"]==true)?
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
+        Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:true,data:this.phoneNo,container: widget.container)))
+        );
+      }
+      return 'signInWithGoogle succeeded: $user';
+    }
 }
 class CompleteRegistration extends StatefulWidget {
   final bool isNumber;
