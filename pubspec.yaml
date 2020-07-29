@@ -1,8 +1,8 @@
 name: firebase_login_register
 description: Firebase login register & complete register 
 version: 0.0.1
-author: Sanu Infotech <infotechsanu@gmail.com>
-homepage: "https://github.com/shantanu850/firebase_full_login_register/"
+author: SanuInfotech
+homepage: https://github.com/shantanu850/firebase_full_login_register/
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -16,9 +16,6 @@ dependencies:
   firebase_auth: ^0.14.0+5
   cloud_firestore: ^0.13.7
   firebase_storage: ^3.1.6
-  image_picker:
-  datetime_picker_formfield: ^1.0.0
-  intl: ^0.16.1
 
 
 dev_dependencies:
