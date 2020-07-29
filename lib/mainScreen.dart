@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -858,24 +859,26 @@ class _LoginScreenState extends State<LoginScreen>
   signInE(String email, String password,context) {
     try {
       FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password)
-          .then((currentUser) => Firestore.instance.collection(widget.databaseName).document(currentUser.user.uid).get())
+          .then((currentUser) => Firestore.instance.collection(widget.databaseName).document(currentUser.user.uid).get()
           .then((DocumentSnapshot result) =>
       (result["CompleteRegister"]==true)?
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
-      Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,)))
+      Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,))))
+      ).catchError((e)=>{
+        _state = 0,
+        print(e.toString())
+      });
+    }on PlatformException catch(e){
+      final snack = new SnackBar(
+        content: new Text(e.message),
+        action: null,
+        duration: new Duration(seconds: 4),
+        backgroundColor: Colors.black,
       );
-    } catch (e){
-      return AlertDialog(
-          title: Text('error'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(e),],),),
-          actions: <Widget>[
-            FlatButton(
-                child: Text('Retry'),
-                onPressed: () {
-                  Navigator.of(context).pop();})]);
+      Scaffold.of(context).showSnackBar(snack);
+      setState(() {
+        _state = 0;
+      });
     }
   }
 
