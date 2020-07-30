@@ -25,26 +25,23 @@ class LoginScreen extends StatefulWidget {
   _LoginScreenState createState() => new _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
   String email,password,displayName,surName,phoneNo,confPassword;
   final formKeyPhone = new GlobalKey<FormState>();
   String verificationId, smsCode;
   bool codeSent = false;
-  int _state = 0;
+  int _state;
   final formKeyReg = GlobalKey<FormState>();
   final formKey = GlobalKey<FormState>();
   final _auth = FirebaseAuth.instance;
   AuthResultStatus _status;
-  _showSackbar(text){
-    final snack = new SnackBar(
-      content: new Text(text),
-      action: null,
-      duration: new Duration(seconds: 4),
-      backgroundColor: Colors.black,
-    );
-    Scaffold.of(context).showSnackBar(snack);
+  PageController _controller = new PageController(initialPage: 1, viewportFraction: 1.0);
+  @override
+  void initState() {
+    _state = 0;
+    super.initState();
   }
+
   showError(BuildContext context,message) {
     // Create button
     Widget okButton = FlatButton(
@@ -53,7 +50,9 @@ class _LoginScreenState extends State<LoginScreen>
         Navigator.of(context).pop();
       },
     );
-
+    setState(() {
+      _state = 2;
+    });
     // Create AlertDialog
     AlertDialog alert = AlertDialog(
       title: Text("Error"),
@@ -71,10 +70,55 @@ class _LoginScreenState extends State<LoginScreen>
       },
     );
   }
-  @override
-  void initState() {
-    super.initState();
+  Future<bool> _onBackPressed() {
+    return showDialog(
+      context: context,
+      builder: (context) => new AlertDialog(
+        title: new Text('Are you sure?'),
+        content: new Text('Do you want to exit an App'),
+        actions: <Widget>[
+          new FlatButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text("NO"),
+          ),
+          SizedBox(height: 16),
+          new FlatButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text("YES"),
+          ),
+        ],
+      ),
+    ) ??
+        false;
   }
+
+  ///main widget
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: _onBackPressed,
+      child: Scaffold(
+        body: Container(
+            decoration: BoxDecoration(
+              color: Colors.redAccent,
+              image: DecorationImage(
+                colorFilter: new ColorFilter.mode(
+                    Colors.black.withOpacity(0.3), BlendMode.dstATop),
+                image: widget.backgroundImageAsset,
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: PageView(
+              controller: _controller,
+              physics: new AlwaysScrollableScrollPhysics(),
+              children: <Widget>[LoginPage(), Home(), SignupPage()],
+              scrollDirection: Axis.horizontal,
+            )),
+      ),
+    );
+  }
+
+  ///main layouts home,loginpage,signuppage,
   Widget Home() {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
@@ -275,7 +319,7 @@ class _LoginScreenState extends State<LoginScreen>
                     children:<Widget>[
                       GestureDetector(
                         onTap: (){
-                          onGoogleTap();
+                          googleSignIn();
                         },
                         child: Container(
                           margin: EdgeInsets.all(5),
@@ -325,57 +369,6 @@ class _LoginScreenState extends State<LoginScreen>
         ],
       ),
     );
-  }
-  signIn(AuthCredential authCreds) {
-    FirebaseAuth.instance.signInWithCredential(authCreds).then((value) =>
-    {
-      if(value.additionalUserInfo.isNewUser){
-        Navigator.pushReplacement(context, MaterialPageRoute(
-            builder: (context) => CompleteRegistration(isNumber:true,data:this.phoneNo,)))
-      }else{
-        Firestore.instance.collection(widget.databaseName).document(value.user.uid).get()
-            .then((DocumentSnapshot result) =>
-        (result["CompleteRegister"]==true)?
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
-        Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:true,data:this.phoneNo,container: widget.container)))
-        )
-      }
-    }
-    );
-  }
-  signInWithOTP(smsCode, verId) {
-    AuthCredential authCreds = PhoneAuthProvider.getCredential(
-        verificationId: verId, smsCode: smsCode);
-    signIn(authCreds);
-  }
-  Future<void> verifyPhone(phoneNo) async {
-    final PhoneVerificationCompleted verified = (AuthCredential authResult) {
-      signIn(authResult);
-    };
-
-    final PhoneVerificationFailed verificationfailed =
-        (AuthException authException) {
-      print('${authException.message}');
-    };
-
-    final PhoneCodeSent smsSent = (String verId, [int forceResend]) {
-      this.verificationId = verId;
-      setState(() {
-        this.codeSent = true;
-      });
-    };
-
-    final PhoneCodeAutoRetrievalTimeout autoTimeout = (String verId) {
-      this.verificationId = verId;
-    };
-
-    await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: phoneNo,
-        timeout: Duration(seconds: 120),
-        verificationCompleted: verified,
-        verificationFailed: verificationfailed,
-        codeSent: smsSent,
-        codeAutoRetrievalTimeout: autoTimeout);
   }
   Widget LoginPage() {
     var height = MediaQuery.of(context).size.height;
@@ -508,28 +501,25 @@ class _LoginScreenState extends State<LoginScreen>
                                     child :InkWell(
                                       borderRadius: BorderRadius.circular(30),
                                       onTap: () async{
-                                          if (formKey.currentState.validate()) {
-                                            setState(() {
-                                              if (_state == 0) {
-                                                animateButton();
-                                              }
-                                            });
-                                            final status = await signInE(email,password,context);
-                                              if (status == AuthResultStatus.successful) {
-                                                _auth.currentUser().then((value) =>
+                                        if (formKey.currentState.validate()) {
+                                          setState(() {
+                                            _state = 1;
+                                          });
+                                          final status = await signInEmail(email,password,context);
+                                          if (status == AuthResultStatus.successful) {
+                                            _auth.currentUser().then((value) =>
                                                 Firestore.instance.collection(widget.databaseName).document(value.uid).get()
                                                     .then((DocumentSnapshot result) =>
                                                 (result["CompleteRegister"]==true)?
                                                 Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
                                                 Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,)))));
-                                              } else {
-                                                final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
-                                                _showSackbar(errorMsg.toString());
-                                                setState(() {
-                                                  _state = 0;
-                                                });
-                                              }
-                                            }
+                                          } else {
+                                            final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
+                                            setState(() {
+                                              _state = 0;
+                                            });
+                                          }
+                                        }
                                       },
                                       splashColor: Colors.blue,
                                       highlightColor: Colors.blue,
@@ -539,7 +529,20 @@ class _LoginScreenState extends State<LoginScreen>
                                           borderRadius: BorderRadius.circular(30),
                                         ),
                                         child: Center(
-                                          child: setUpButtonChild("SignIn"),
+                                          child:(_state==0)?Text(
+                                            "Login",
+                                            style: const TextStyle(
+                                              color: Colors.purple,
+                                              fontSize: 16.0,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ):ColorLoader(
+                                            dotOneColor: Colors.purple,
+                                            dotTwoColor: Colors.pink,
+                                            dotThreeColor: Colors.red,
+                                            dotType: DotType.circle,
+                                            duration: Duration(seconds:2),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -572,7 +575,6 @@ class _LoginScreenState extends State<LoginScreen>
       ),
     );
   }
-
   Widget SignupPage() {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
@@ -750,21 +752,31 @@ class _LoginScreenState extends State<LoginScreen>
                                     child :InkWell(
                                       borderRadius: BorderRadius.circular(30),
                                       onTap: () async{
-                                        try {
                                           if (formKeyReg.currentState.validate()) {
                                             if (password == confPassword) {
-                                              signUp(email, password, context);
                                               setState(() {
-                                                if (_state == 0) {
-                                                  animateButton();
-                                                }
+                                                _state = 1;
                                               });
+                                              final status = await signUpEmail(email,password,context);
+                                              if (status == AuthResultStatus.successful) {
+                                                _auth.currentUser().then((value) =>
+                                                    Firestore.instance.collection(widget.databaseName).document(value.uid).setData({
+                                                      "CompleteRegister":false,
+                                                    }).then((value) =>
+                                                        Navigator.push(context, MaterialPageRoute(
+                                                            builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,)))
+                                                    )
+                                                );
+                                              } else {
+                                                final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
+                                                setState(() {
+                                                  _state = 0;
+                                                });
+                                              }
                                             }else{
-                                              Scaffold.of(context).showSnackBar(SnackBar(content: Text('Password and Confirm password did not match')));
+                                              showError(context, 'Password and Confirm password did not match');
                                             }
                                           }
-                                        }catch(e){
-                                        }
                                       },
                                       splashColor: Colors.blue,
                                       highlightColor: Colors.blue,
@@ -774,7 +786,20 @@ class _LoginScreenState extends State<LoginScreen>
                                           borderRadius: BorderRadius.circular(30),
                                         ),
                                         child: Center(
-                                          child: setUpButtonChild("SignUp"),
+                                          child:(_state!=0)?Text(
+                                            "Sign Up",
+                                            style: const TextStyle(
+                                              color: Colors.purple,
+                                              fontSize: 16.0,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ):ColorLoader(
+                                            dotOneColor: Colors.purple,
+                                            dotTwoColor: Colors.pink,
+                                            dotThreeColor: Colors.red,
+                                            dotType: DotType.circle,
+                                            duration: Duration(seconds:2),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -794,7 +819,7 @@ class _LoginScreenState extends State<LoginScreen>
                     gotoLogin();
                   },
                   child: Text(
-                    "Don't have an account? Sign In",
+                    "Alredy an account? Sign In",
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     style: TextStyle(
@@ -810,6 +835,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  ///layout swap controller
   gotoLogin() {
     //controller_0To1.forward(from: 0.0);
     _controller.animateToPage(
@@ -818,7 +844,6 @@ class _LoginScreenState extends State<LoginScreen>
       curve: Curves.bounceOut,
     );
   }
-
   gotoSignup() {
     //controller_minus1To0.reverse(from: 0.0);
     _controller.animateToPage(
@@ -828,85 +853,9 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  PageController _controller = new PageController(initialPage: 1, viewportFraction: 1.0);
-  Future<bool> _onBackPressed() {
-    return showDialog(
-      context: context,
-      builder: (context) => new AlertDialog(
-        title: new Text('Are you sure?'),
-        content: new Text('Do you want to exit an App'),
-        actions: <Widget>[
-          new FlatButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text("NO"),
-          ),
-          SizedBox(height: 16),
-          new FlatButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text("YES"),
-          ),
-        ],
-      ),
-    ) ??
-        false;
-  }
-  @override
-  Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onBackPressed,
-      child: Scaffold(
-        body: Container(
-            decoration: BoxDecoration(
-              color: Colors.redAccent,
-              image: DecorationImage(
-                colorFilter: new ColorFilter.mode(
-                    Colors.black.withOpacity(0.3), BlendMode.dstATop),
-                image: widget.backgroundImageAsset,
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: PageView(
-              controller: _controller,
-              physics: new AlwaysScrollableScrollPhysics(),
-              children: <Widget>[LoginPage(), Home(), SignupPage()],
-              scrollDirection: Axis.horizontal,
-            )),
-      ),
-    );
-  }
-  Widget setUpButtonChild(String text) {
-    if (_state == 0) {
-      return new Text(
-        text,
-        style: const TextStyle(
-          color: Colors.purple,
-          fontSize: 16.0,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-    } else{
-      return ColorLoader(
-        dotOneColor: Colors.purple,
-        dotTwoColor: Colors.pink,
-        dotThreeColor: Colors.red,
-        dotType: DotType.circle,
-        duration: Duration(seconds:2),
-      );
-    }
-  }
 
-  void animateButton() {
-    setState(() {
-      _state = 1;
-    });
-
-    Timer(Duration(milliseconds: 2000), () {
-      setState(() {
-        _state = 2;
-      });
-    });
-  }
-  Future<AuthResultStatus> signInE(String email, String password,context) async{
+  ///sign in methods
+  Future<AuthResultStatus> signInEmail(String email, String password,context) async{
     try {
       AuthResult authResult = await _auth.signInWithEmailAndPassword(email: email, password: password);
       if (authResult.user != null) {
@@ -917,54 +866,140 @@ class _LoginScreenState extends State<LoginScreen>
     }catch(e){
       print('Exception @createAccount: $e');
       showError(context,e);
+      setState(() {
+        _state = 0;
+      });
       _status = AuthExceptionHandler.handleException(e);
     }
     return _status;
   }
-
-  signUp(email, password,context) async{
-    AuthResult authResult =  await _auth.createUserWithEmailAndPassword(email: email, password: password,)
-        .then((currentUser) =>
-       _auth.currentUser().then((value) =>
-            Firestore.instance.collection(widget.databaseName).document(value.uid).setData({
-              "CompleteRegister":false,
-            }).then((value) =>
-            Navigator.push(context, MaterialPageRoute(
-                builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,)))
-            )
-        )
-    );
+  Future<AuthResultStatus> signUpEmail(email, password,context) async{
+    try {
+      AuthResult authResult = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      if (authResult.user != null) {
+        _status = AuthResultStatus.successful;
+      } else {
+        _status = AuthResultStatus.undefined;
+      }
+    }catch(e){
+      print('Exception @createAccount: $e');
+      showError(context,e);
+      setState(() {
+        _state = 0;
+      });
+      _status = AuthExceptionHandler.handleException(e);
+    }
+    return _status;
   }
-    Future<String> onGoogleTap() async {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
-      final GoogleSignInAuthentication googleSignInAuthentication =
-      await googleSignInAccount.authentication;
+  Future<AuthResultStatus> googleSignIn() async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
+    final GoogleSignInAuthentication googleSignInAuthentication =
+    await googleSignInAccount.authentication;
 
-      final AuthCredential credential = GoogleAuthProvider.getCredential(
-        accessToken: googleSignInAuthentication.accessToken,
-        idToken: googleSignInAuthentication.idToken,
-      );
-      final AuthResult authResult = await FirebaseAuth.instance.signInWithCredential(credential);
-      final FirebaseUser user = authResult.user;
+    final AuthCredential credential = GoogleAuthProvider.getCredential(
+      accessToken: googleSignInAuthentication.accessToken,
+      idToken: googleSignInAuthentication.idToken,
+    );
+    try {
+      AuthResult authResult = await FirebaseAuth.instance.signInWithCredential(credential);
+      FirebaseUser user = authResult.user;
       assert(!user.isAnonymous);
       assert(await user.getIdToken() != null);
       final FirebaseUser currentUser = await FirebaseAuth.instance.currentUser();
       assert(user.uid == currentUser.uid);
-      if(authResult.additionalUserInfo.isNewUser){
-        Navigator.pushReplacement(context, MaterialPageRoute(
-            builder: (context) => CompleteRegistration(isNumber:true,data:this.phoneNo,)));
+      if(authResult.user != null) {
+        if (authResult.additionalUserInfo.isNewUser) {
+          Navigator.pushReplacement(context, MaterialPageRoute(
+              builder: (context) =>
+                  CompleteRegistration(isNumber: true, data: this.phoneNo,)));
+        } else {
+          Firestore.instance.collection(widget.databaseName).document(user.uid)
+              .get()
+              .then((DocumentSnapshot result) =>
+          (result["CompleteRegister"] == true) ?
+          Navigator.pushReplacement(context, MaterialPageRoute(
+              builder: (context) => HomeScreenMain(home: widget.home))) :
+          Navigator.push(context, MaterialPageRoute(builder: (context) =>
+              CompleteRegistration(isNumber: true,
+                  data: this.phoneNo,
+                  container: widget.container)))
+          );
+        }
       }else{
-        Firestore.instance.collection(widget.databaseName).document(user.uid).get()
-            .then((DocumentSnapshot result) =>
-        (result["CompleteRegister"]==true)?
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
-        Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:true,data:this.phoneNo,container: widget.container)))
-        );
+        showError(context,"User is not available , Try again ");
       }
-      return 'signInWithGoogle succeeded: $user';
+    }catch(e){
+      print('Exception @createAccount: $e');
+      showError(context,e);
+      setState(() {
+        _state = 0;
+      });
+      _status = AuthExceptionHandler.handleException(e);
     }
+    return _status;
+  }
+  Future<AuthResultStatus> signIn(AuthCredential authCreds) async{
+    try{
+      AuthResult authResult = await _auth.signInWithCredential(authCreds);
+      if(authResult != null){
+        if(authResult.additionalUserInfo.isNewUser){
+          Navigator.pushReplacement(context, MaterialPageRoute(
+              builder: (context) => CompleteRegistration(isNumber:true,data:this.phoneNo,)));
+        }else{
+          Firestore.instance.collection(widget.databaseName).document(authResult.user.uid).get()
+              .then((DocumentSnapshot result) =>
+          (result["CompleteRegister"]==true)?
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
+          Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:true,data:this.phoneNo,container: widget.container))));
+        }
+      }
+    }catch(e){
+      print('Exception @createAccount: $e');
+      showError(context,e);
+      setState(() {
+        _state = 0;
+      });
+      _status = AuthExceptionHandler.handleException(e);
+    }
+    return _status;
+  }
+  signInWithOTP(smsCode, verId) {
+    AuthCredential authCreds = PhoneAuthProvider.getCredential(verificationId: verId, smsCode: smsCode);
+    signIn(authCreds);
+  }
+  Future<void> verifyPhone(phoneNo) async {
+    final PhoneVerificationCompleted verified = (AuthCredential authResult) {
+      signIn(authResult);
+    };
+    final PhoneVerificationFailed verificationfailed =
+        (AuthException authException) {
+      showError(context, authException.message);
+      print('${authException.message}');
+    };
+
+    final PhoneCodeSent smsSent = (String verId, [int forceResend]) {
+      this.verificationId = verId;
+      setState(() {
+        this.codeSent = true;
+      });
+    };
+
+    final PhoneCodeAutoRetrievalTimeout autoTimeout = (String verId) {
+      this.verificationId = verId;
+    };
+
+    await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phoneNo,
+        timeout: Duration(seconds: 120),
+        verificationCompleted: verified,
+        verificationFailed: verificationfailed,
+        codeSent: smsSent,
+        codeAutoRetrievalTimeout: autoTimeout);
+  }
 }
+
+///complete registration page
 class CompleteRegistration extends StatefulWidget {
   final bool isNumber;
   final String data;
@@ -973,15 +1008,15 @@ class CompleteRegistration extends StatefulWidget {
   @override
   _CompleteRegistrationState createState() => _CompleteRegistrationState();
 }
-
 class _CompleteRegistrationState extends State<CompleteRegistration> {
   @override
   Widget build(BuildContext context) {
     return widget.container;
 
   }
-
 }
+
+///color loader
 class ColorLoader extends StatefulWidget {
 
   final Color dotOneColor;
@@ -1003,9 +1038,7 @@ class ColorLoader extends StatefulWidget {
   @override
   _ColorLoaderState createState() => _ColorLoaderState();
 }
-
-class _ColorLoaderState extends State<ColorLoader>
-    with SingleTickerProviderStateMixin {
+class _ColorLoaderState extends State<ColorLoader> with SingleTickerProviderStateMixin {
   Animation<double> animation_1;
   Animation<double> animation_2;
   Animation<double> animation_3;
@@ -1120,7 +1153,6 @@ class _ColorLoaderState extends State<ColorLoader>
     super.dispose();
   }
 }
-
 class Dot extends StatelessWidget {
   final double radius;
   final Color color;
@@ -1149,179 +1181,13 @@ enum DotType {
   square, circle, diamond, icon
 }
 
-class GoogleLoder extends StatefulWidget {
-
-  final Color dotOneColor;
-  final Color dotTwoColor;
-  final Color dotThreeColor;
-  final Color dotFourColor;
-  final Duration duration;
-  final DotType dotType;
-  final Icon dotIcon;
-
-  GoogleLoder({
-    this.dotOneColor = Colors.blue,
-    this.dotTwoColor = Colors.red,
-    this.dotThreeColor = Colors.yellow,
-    this.dotFourColor = Colors.green,
-    this.duration = const Duration(milliseconds: 1000),
-    this.dotType = DotType.circle,
-    this.dotIcon = const Icon(Icons.blur_on)
-  });
-
-  @override
-  _GoogleLoader createState() => _GoogleLoader();
-}
-
-class _GoogleLoader extends State<GoogleLoder>
-    with SingleTickerProviderStateMixin {
-  Animation<double> animation_1;
-  Animation<double> animation_2;
-  Animation<double> animation_3;
-  Animation<double> animation_4;
-  AnimationController controller;
-
-  @override
-  void initState() {
-    super.initState();
-
-    controller = AnimationController(
-        duration: widget.duration, vsync: this);
-
-    animation_1 = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Interval(0.0, 0.70, curve: Curves.ease),
-      ),
-    );
-
-    animation_2 = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Interval(0.1, 0.8, curve: Curves.ease),
-      ),
-    );
-
-    animation_3 = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Interval(0.2, 0.9, curve: Curves.ease),
-      ),
-    );
-
-    animation_4 = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: controller,
-        curve: Interval(0.3, 1.0, curve: Curves.ease),
-      ),
-    );
-
-    controller.addListener(() {
-      setState(() {
-        //print(animation_1.value);
-      });
-    });
-
-    controller.repeat();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: new Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          new Transform.translate(
-            offset: Offset(
-              0.0,
-              -30 *
-                  (animation_1.value <= 0.50
-                      ? animation_1.value
-                      : 1.0 - animation_1.value),
-            ),
-            child: new Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Dot(
-                radius: 10.0,
-                color: widget.dotOneColor,
-                type: widget.dotType,
-                icon: widget.dotIcon,
-              ),
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(
-              0.0,
-              -30 *
-                  (animation_2.value <= 0.50
-                      ? animation_2.value
-                      : 1.0 - animation_2.value),
-            ),
-            child: new Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Dot(
-                radius: 10.0,
-                color: widget.dotTwoColor,
-                type: widget.dotType,
-                icon: widget.dotIcon,
-              ),
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(
-              0.0,
-              -30 *
-                  (animation_3.value <= 0.50
-                      ? animation_3.value
-                      : 1.0 - animation_3.value),
-            ),
-            child: new Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Dot(
-                radius: 10.0,
-                color: widget.dotThreeColor,
-                type: widget.dotType,
-                icon: widget.dotIcon,
-              ),
-            ),
-          ),
-          Transform.translate(
-            offset: Offset(
-              0.0,
-              -30 *
-                  (animation_4.value <= 0.50
-                      ? animation_4.value
-                      : 1.0 - animation_4.value),
-            ),
-            child: new Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: Dot(
-                radius: 10.0,
-                color: widget.dotFourColor,
-                type: widget.dotType,
-                icon: widget.dotIcon,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-
-    controller.dispose();
-    super.dispose();
-  }
-}
+///home page
 class HomeScreenMain extends StatefulWidget {
   final home;
   const HomeScreenMain({Key key, this.home}) : super(key: key);
   @override
   _HomeScreenMainState createState() => _HomeScreenMainState();
 }
-
 class _HomeScreenMainState extends State<HomeScreenMain> {
   @override
   Widget build(BuildContext context) {
