@@ -60,12 +60,11 @@ class _SplashPageState extends State<Auth> with TickerProviderStateMixin {
           Firestore.instance.collection(widget.userDataBaseName).document(currentUser.uid)
               .get()
               .then((value) =>
-          (value['CompleteRegister'] == true ||
-              value['CompleteRegister'] != null) ?
+          (value['CompleteRegister'] == true)?
           Navigator.pushReplacement(context,
             MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.homePage,user:value)),
           ) : Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => Registration(container:widget.completeRegisterPage,isNumber:false,data:null)),
+            MaterialPageRoute(builder: (context) => Registration(container:widget.completeRegisterPage,isNumber:null,data:"")),
           )
           ),
         }
