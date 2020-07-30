@@ -1,5 +1,5 @@
 library firebase_login_register;
-//new 2
+//new 3
 import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -36,6 +36,15 @@ class _LoginScreenState extends State<LoginScreen>
   final formKey = GlobalKey<FormState>();
   final _auth = FirebaseAuth.instance;
   AuthResultStatus _status;
+  _showSackbar(text){
+    final snack = new SnackBar(
+      content: new Text(text),
+      action: null,
+      duration: new Duration(seconds: 4),
+      backgroundColor: Colors.black,
+    );
+    Scaffold.of(context).showSnackBar(snack);
+  }
   @override
   void initState() {
     super.initState();
@@ -477,6 +486,7 @@ class _LoginScreenState extends State<LoginScreen>
                                           if (formKey.currentState.validate()) {
                                               final status = await signInE(email,password,context);
                                               if (status == AuthResultStatus.successful) {
+                                                animateButton();
                                                 // Navigate to success page
                                                 _auth.currentUser().then((value) =>
                                                 Firestore.instance.collection(widget.databaseName).document(value.uid).get()
@@ -487,13 +497,8 @@ class _LoginScreenState extends State<LoginScreen>
                                               } else {
                                                 final errorMsg = AuthExceptionHandler.generateExceptionMessage(
                                                     status);
-                                                final snack = new SnackBar(
-                                                  content: new Text(errorMsg),
-                                                  action: null,
-                                                  duration: new Duration(seconds: 4),
-                                                  backgroundColor: Colors.black,
-                                                );
-                                                Scaffold.of(context).showSnackBar(snack);
+                                                _showSackbar(errorMsg);
+                                                print("sackbar"+errorMsg);
                                                 setState(() {
                                                   _state = 0;
                                                 });
