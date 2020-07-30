@@ -1,5 +1,5 @@
 library firebase_login_register;
-//new 5
+
 import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,7 +20,21 @@ class LoginScreen extends StatefulWidget {
   final Widget container;
   final onFacebooktap;
   final home;
-  const LoginScreen({Key key, this.appIcon, this.appName, this.googleImage, this.facebookImage, this.emailImage, this.databaseName, this.backgroundImageAsset, this.container, this.home, this.onFacebooktap}): super(key: key);
+  final Color backgroundColor;
+
+  const LoginScreen({Key key,
+    this.appIcon,
+    this.appName,
+    this.googleImage,
+    this.facebookImage,
+    this.emailImage,
+    this.databaseName,
+    this.backgroundImageAsset,
+    this.container,
+    this.home,
+    this.onFacebooktap,
+    this.backgroundColor = Colors.redAccent,
+  }): super(key: key);
   @override
   _LoginScreenState createState() => new _LoginScreenState();
 }
@@ -42,6 +56,92 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     super.initState();
   }
 
+  ///Alert popups
+  showReset(BuildContext context) {
+    bool send = false;
+    String email;
+    AlertDialog alert = AlertDialog(
+      title: Text("We will send you password reset link"),
+      content: Padding(
+        padding: const EdgeInsets.symmetric(vertical:5.0),
+        child: TextFormField(
+          obscureText: false,
+          decoration: new InputDecoration(
+            prefixIcon: new Icon(Icons.person,color:Colors.white),
+            labelText: 'Email',
+            labelStyle: TextStyle(color: Colors.white),
+            fillColor: Colors.white12,
+            filled: true,
+            border: new OutlineInputBorder(
+                borderRadius: new BorderRadius.circular(25.0),
+                borderSide: new BorderSide(
+                  color: Colors.white,
+                )),
+            focusedBorder: new OutlineInputBorder(
+                borderRadius: new BorderRadius.circular(25.0),
+                borderSide: new BorderSide(
+                  color: Colors.white,
+                )),
+            enabledBorder: new OutlineInputBorder(
+                borderRadius: new BorderRadius.circular(25.0),
+                borderSide: new BorderSide(
+                  color: Colors.white,
+                )),
+          ),
+          validator: (val) {
+            Pattern pattern =
+                r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+            RegExp regex = new RegExp(pattern);
+            if (!regex.hasMatch(val)) {
+              return 'Email format is invalid';
+            } else {
+              return null;
+            }
+          },
+          onChanged: (value) {
+            email = value; //get the value entered by user.
+          },
+          keyboardType: TextInputType.emailAddress,
+          style: new TextStyle(
+            height: 1.0,
+            fontSize: 14,
+            fontFamily: "Poppins",
+          ),
+        ),
+      ),
+      actions: [
+        (send==false)?ButtonBar(
+            children:[
+              FlatButton(
+                onPressed: () {
+                  resetPassword(email, context);
+                  setState(() {
+                    send = true;
+                  });
+                }, child: null,
+              ),
+              FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: null,
+              )
+            ]
+        ):FlatButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: null,
+        )
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
   showError(BuildContext context,message) {
     // Create button
     Widget okButton = FlatButton(
@@ -100,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       child: Scaffold(
         body: Container(
             decoration: BoxDecoration(
-              color: Colors.redAccent,
+              color: widget.backgroundColor,
               image: DecorationImage(
                 colorFilter: new ColorFilter.mode(
                     Colors.black.withOpacity(0.3), BlendMode.dstATop),
@@ -111,15 +211,15 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             child: PageView(
               controller: _controller,
               physics: new AlwaysScrollableScrollPhysics(),
-              children: <Widget>[LoginPage(), Home(), SignupPage()],
+              children: <Widget>[loginPage(), home(), signUpPage()],
               scrollDirection: Axis.horizontal,
             )),
       ),
     );
   }
 
-  ///main layouts home,loginpage,signuppage,
-  Widget Home() {
+  ///main layouts home,loginPage,signUpPage,
+  Widget home() {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
     return Container(
@@ -370,8 +470,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       ),
     );
   }
-  Widget LoginPage() {
-    var height = MediaQuery.of(context).size.height;
+  Widget loginPage() {
     var width = MediaQuery.of(context).size.width;
     return Container(
       alignment: Alignment.center,
@@ -511,10 +610,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                                 Firestore.instance.collection(widget.databaseName).document(value.uid).get()
                                                     .then((DocumentSnapshot result) =>
                                                 (result["CompleteRegister"]==true)?
-                                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
-                                                Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,)))));
+                                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home,user:result))):
+                                                Navigator.push(context, MaterialPageRoute(builder: (context) => Registration(isNumber:false,data:email,container: widget.container,)))));
                                           } else {
-                                            final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
+                                           //final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
                                             setState(() {
                                               _state = 0;
                                             });
@@ -536,7 +635,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                               fontSize: 16.0,
                                               fontWeight: FontWeight.bold,
                                             ),
-                                          ):ColorLoader(
+                                          ):Loader(
                                             dotOneColor: Colors.purple,
                                             dotTwoColor: Colors.pink,
                                             dotThreeColor: Colors.red,
@@ -558,7 +657,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 width: width*0.55,
                 padding: EdgeInsets.symmetric(vertical:width*0.02),
                 child :GestureDetector(
-                  onTap: (){gotoSignup();},
+                  onTap: (){gotoSignUp();},
                   child: Text(
                     "Don't have an account? Sign Up",
                     textAlign: TextAlign.center,
@@ -569,14 +668,28 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   ),
                 ),
               ),
+              Container(
+                width: width*0.55,
+                padding: EdgeInsets.symmetric(vertical:width*0.02),
+                child :GestureDetector(
+                  onTap: (){},
+                  child: Text(
+                    "Forgot Password ? ",
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
+                ),
+              ),
             ],
           ),
         ],
       ),
     );
   }
-  Widget SignupPage() {
-    var height = MediaQuery.of(context).size.height;
+  Widget signUpPage() {
     var width = MediaQuery.of(context).size.width;
     return Container(
       alignment: Alignment.center,
@@ -764,11 +877,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                                       "CompleteRegister":false,
                                                     }).then((value) =>
                                                         Navigator.push(context, MaterialPageRoute(
-                                                            builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,)))
+                                                            builder: (context) => Registration(isNumber:false,data:email,container: widget.container,)))
                                                     )
                                                 );
                                               } else {
-                                                final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
+                                               // final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
                                                 setState(() {
                                                   _state = 0;
                                                 });
@@ -793,7 +906,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                               fontSize: 16.0,
                                               fontWeight: FontWeight.bold,
                                             ),
-                                          ):ColorLoader(
+                                          ):Loader(
                                             dotOneColor: Colors.purple,
                                             dotTwoColor: Colors.pink,
                                             dotThreeColor: Colors.red,
@@ -819,7 +932,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     gotoLogin();
                   },
                   child: Text(
-                    "Alredy an account? Sign In",
+                    "Already an account? Sign In",
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     style: TextStyle(
@@ -844,7 +957,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       curve: Curves.bounceOut,
     );
   }
-  gotoSignup() {
+  gotoSignUp() {
     _controller.animateToPage(
       2,
       duration: Duration(milliseconds: 800),
@@ -876,6 +989,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     try {
       AuthResult authResult = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       if (authResult.user != null) {
+        Firestore.instance.collection('user').document(authResult.user.uid).setData({"CompleteRegister":false,});
+        authResult.user.sendEmailVerification();
         _status = AuthResultStatus.successful;
       } else {
         _status = AuthResultStatus.undefined;
@@ -909,18 +1024,19 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       assert(user.uid == currentUser.uid);
       if(authResult.user != null) {
         if (authResult.additionalUserInfo.isNewUser) {
+          Firestore.instance.collection('user').document(authResult.user.uid).setData({"CompleteRegister":false,});
           Navigator.pushReplacement(context, MaterialPageRoute(
               builder: (context) =>
-                  CompleteRegistration(isNumber: true, data: this.phoneNo,)));
+                  Registration(isNumber:false,data:user.email,container:widget.container)));
         } else {
           Firestore.instance.collection(widget.databaseName).document(user.uid)
               .get()
               .then((DocumentSnapshot result) =>
           (result["CompleteRegister"] == true) ?
           Navigator.pushReplacement(context, MaterialPageRoute(
-              builder: (context) => HomeScreenMain(home: widget.home))) :
+              builder: (context) => HomeScreenMain(home: widget.home,user:result))) :
           Navigator.push(context, MaterialPageRoute(builder: (context) =>
-              CompleteRegistration(isNumber: true,
+              Registration(isNumber: true,
                   data: this.phoneNo,
                   container: widget.container)))
           );
@@ -943,14 +1059,15 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       AuthResult authResult = await _auth.signInWithCredential(authCreds);
       if(authResult != null){
         if(authResult.additionalUserInfo.isNewUser){
+          Firestore.instance.collection('user').document(authResult.user.uid).setData({"CompleteRegister":false,});
           Navigator.pushReplacement(context, MaterialPageRoute(
-              builder: (context) => CompleteRegistration(isNumber:true,data:this.phoneNo,)));
+              builder: (context) => Registration(isNumber:true,data:this.phoneNo,)));
         }else{
           Firestore.instance.collection(widget.databaseName).document(authResult.user.uid).get()
               .then((DocumentSnapshot result) =>
           (result["CompleteRegister"]==true)?
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
-          Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:true,data:this.phoneNo,container: widget.container))));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home,user:result))):
+          Navigator.push(context, MaterialPageRoute(builder: (context) => Registration(isNumber:true,data:this.phoneNo,container: widget.container))));
         }
       }
     }catch(e){
@@ -996,18 +1113,22 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         codeSent: smsSent,
         codeAutoRetrievalTimeout: autoTimeout);
   }
+  Future<void> resetPassword(String email,context) async {
+    await _auth.sendPasswordResetEmail(email: email).whenComplete(() => Navigator.of(context).pop());
+  }
+
 }
 
 ///complete registration page
-class CompleteRegistration extends StatefulWidget {
+class Registration extends StatefulWidget {
   final bool isNumber;
   final String data;
   final Widget container;
-  const CompleteRegistration({Key key, this.isNumber, this.data, this.container}) : super(key: key);
+  const Registration({Key key, this.isNumber, this.data, this.container}) : super(key: key);
   @override
-  _CompleteRegistrationState createState() => _CompleteRegistrationState();
+  _RegistrationState createState() => _RegistrationState();
 }
-class _CompleteRegistrationState extends State<CompleteRegistration> {
+class _RegistrationState extends State<Registration> {
   @override
   Widget build(BuildContext context) {
     return widget.container;
@@ -1016,7 +1137,7 @@ class _CompleteRegistrationState extends State<CompleteRegistration> {
 }
 
 ///color loader
-class ColorLoader extends StatefulWidget {
+class Loader extends StatefulWidget {
 
   final Color dotOneColor;
   final Color dotTwoColor;
@@ -1025,7 +1146,7 @@ class ColorLoader extends StatefulWidget {
   final DotType dotType;
   final Icon dotIcon;
 
-  ColorLoader({
+  Loader({
     this.dotOneColor = Colors.redAccent,
     this.dotTwoColor = Colors.green,
     this.dotThreeColor = Colors.white,
@@ -1035,9 +1156,9 @@ class ColorLoader extends StatefulWidget {
   });
 
   @override
-  _ColorLoaderState createState() => _ColorLoaderState();
+  _LoaderState createState() => _LoaderState();
 }
-class _ColorLoaderState extends State<ColorLoader> with SingleTickerProviderStateMixin {
+class _LoaderState extends State<Loader> with SingleTickerProviderStateMixin {
   Animation<double> animation_1;
   Animation<double> animation_2;
   Animation<double> animation_3;
@@ -1183,7 +1304,8 @@ enum DotType {
 ///home page
 class HomeScreenMain extends StatefulWidget {
   final home;
-  const HomeScreenMain({Key key, this.home}) : super(key: key);
+  final user;
+  const HomeScreenMain({Key key, this.home, this.user}) : super(key: key);
   @override
   _HomeScreenMainState createState() => _HomeScreenMainState();
 }

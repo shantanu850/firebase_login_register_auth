@@ -63,9 +63,9 @@ class _SplashPageState extends State<Auth> with TickerProviderStateMixin {
           (value['CompleteRegister'] == true ||
               value['CompleteRegister'] != null) ?
           Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.homePage)),
+            MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.homePage,user:value)),
           ) : Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => CompleteRegistration(container:widget.completeRegisterPage,isNumber:false,data:"")),
+            MaterialPageRoute(builder: (context) => Registration(container:widget.completeRegisterPage,isNumber:false,data:null)),
           )
           ),
         }
