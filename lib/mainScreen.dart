@@ -1049,8 +1049,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           Navigator.pushReplacement(context, MaterialPageRoute(
               builder: (context) => HomeScreenMain(home: widget.home,user:result))) :
           Navigator.push(context, MaterialPageRoute(builder: (context) =>
-              Registration(isNumber: true,
-                  data: this.phoneNo,
+              Registration(isNumber:false,
+                  data:authResult.user.email,
                   container: widget.container)))
           );
         }
@@ -1074,7 +1074,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         if(authResult.additionalUserInfo.isNewUser){
           Firestore.instance.collection('user').document(authResult.user.uid).setData({"CompleteRegister":false,});
           Navigator.pushReplacement(context, MaterialPageRoute(
-              builder: (context) => Registration(isNumber:true,data:this.phoneNo,)));
+              builder: (context) => Registration(isNumber:true,data:this.phoneNo,container:widget.container)));
         }else{
           Firestore.instance.collection(widget.databaseName).document(authResult.user.uid).get()
               .then((DocumentSnapshot result) =>
