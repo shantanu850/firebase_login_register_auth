@@ -1,5 +1,5 @@
 library firebase_login_register;
-//new 4
+//new 5
 import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen>
     // Create AlertDialog
     AlertDialog alert = AlertDialog(
       title: Text("Error"),
-      content: Text(message),
+      content: Text(message.toString()),
       actions: [
         okButton,
       ],
@@ -509,13 +509,13 @@ class _LoginScreenState extends State<LoginScreen>
                                       borderRadius: BorderRadius.circular(30),
                                       onTap: () async{
                                           if (formKey.currentState.validate()) {
-                                              final status = await signInE(email,password,context);
+                                            setState(() {
+                                              if (_state == 0) {
+                                                animateButton();
+                                              }
+                                            });
+                                            final status = await signInE(email,password,context);
                                               if (status == AuthResultStatus.successful) {
-                                                setState(() {
-                                                  if (_state == 0) {
-                                                    animateButton();
-                                                  }
-                                                });
                                                 _auth.currentUser().then((value) =>
                                                 Firestore.instance.collection(widget.databaseName).document(value.uid).get()
                                                     .then((DocumentSnapshot result) =>
@@ -524,6 +524,7 @@ class _LoginScreenState extends State<LoginScreen>
                                                 Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,)))));
                                               } else {
                                                 final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
+                                                _showSackbar(errorMsg.toString());
                                                 setState(() {
                                                   _state = 0;
                                                 });
