@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_login_register/exception_Handaler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -33,6 +34,8 @@ class _LoginScreenState extends State<LoginScreen>
   int _state = 0;
   final formKeyReg = GlobalKey<FormState>();
   final formKey = GlobalKey<FormState>();
+  final _auth = FirebaseAuth.instance;
+  AuthResultStatus _status;
   @override
   void initState() {
     super.initState();
@@ -472,7 +475,29 @@ class _LoginScreenState extends State<LoginScreen>
                                       onTap: () async{
                                         try {
                                           if (formKey.currentState.validate()) {
-                                            signInE(email, password, context);
+                                              final status = await signInE(email,password,context);
+                                              if (status == AuthResultStatus.successful) {
+                                                // Navigate to success page
+                                                _auth.currentUser().then((value) =>
+                                                Firestore.instance.collection(widget.databaseName).document(value.uid).get()
+                                                    .then((DocumentSnapshot result) =>
+                                                (result["CompleteRegister"]==true)?
+                                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
+                                                Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,)))));
+                                              } else {
+                                                final errorMsg = AuthExceptionHandler.generateExceptionMessage(
+                                                    status);
+                                                final snack = new SnackBar(
+                                                  content: new Text(errorMsg),
+                                                  action: null,
+                                                  duration: new Duration(seconds: 4),
+                                                  backgroundColor: Colors.black,
+                                                );
+                                                Scaffold.of(context).showSnackBar(snack);
+                                                setState(() {
+                                                  _state = 0;
+                                                });
+                                              }
                                             setState(() {
                                               if (_state == 0) {
                                                 animateButton();
@@ -856,39 +881,30 @@ class _LoginScreenState extends State<LoginScreen>
       });
     });
   }
-  signInE(String email, String password,context) {
+  Future<AuthResultStatus> signInE(String email, String password,context) async{
     try {
-      FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password)
-          .then((currentUser) => Firestore.instance.collection(widget.databaseName).document(currentUser.user.uid).get()
-          .then((DocumentSnapshot result) =>
-      (result["CompleteRegister"]==true)?
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
-      Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,))))
-      );
-    }on PlatformException catch(e){
-      print(e.toString());
-      final snack = new SnackBar(
-        content: new Text(e.message),
-        action: null,
-        duration: new Duration(seconds: 4),
-        backgroundColor: Colors.black,
-      );
-      Scaffold.of(context).showSnackBar(snack);
-      setState(() {
-        _state = 0;
-      });
+      AuthResult authResult = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      if (authResult.user != null) {
+        _status = AuthResultStatus.successful;
+      } else {
+        _status = AuthResultStatus.undefined;
+      }
+    }catch(e){
+      print('Exception @createAccount: $e');
+      _status = AuthExceptionHandler.handleException(e);
     }
+    return _status;
   }
 
-  signUp(email, password,context) {
-    FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password,)
+  signUp(email, password,context) async{
+    AuthResult authResult =  await _auth.createUserWithEmailAndPassword(email: email, password: password,)
         .then((currentUser) =>
-        FirebaseAuth.instance.currentUser().then((value) =>
+       _auth.currentUser().then((value) =>
             Firestore.instance.collection(widget.databaseName).document(value.uid).setData({
               "CompleteRegister":false,
             }).then((value) =>
-            {Navigator.push(context, MaterialPageRoute(
-                builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,)))}
+            Navigator.push(context, MaterialPageRoute(
+                builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,)))
             )
         )
     );
