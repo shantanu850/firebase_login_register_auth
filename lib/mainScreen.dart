@@ -280,7 +280,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               },
               onChanged: (value) {
                 setState(() {
-                  this.phoneNo = value;
+                  String code = "+91";
+                  this.phoneNo = code+value;
                 });//get the value entered by user.
               },
               keyboardType: TextInputType.phone,
