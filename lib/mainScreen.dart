@@ -1,5 +1,5 @@
 library firebase_login_register;
-//new 3
+//new 4
 import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -44,6 +44,32 @@ class _LoginScreenState extends State<LoginScreen>
       backgroundColor: Colors.black,
     );
     Scaffold.of(context).showSnackBar(snack);
+  }
+  showError(BuildContext context,message) {
+    // Create button
+    Widget okButton = FlatButton(
+      child: Text("OK"),
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    // Create AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Error"),
+      content: Text(message),
+      actions: [
+        okButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
   @override
   void initState() {
@@ -482,12 +508,14 @@ class _LoginScreenState extends State<LoginScreen>
                                     child :InkWell(
                                       borderRadius: BorderRadius.circular(30),
                                       onTap: () async{
-                                        try {
                                           if (formKey.currentState.validate()) {
                                               final status = await signInE(email,password,context);
                                               if (status == AuthResultStatus.successful) {
-                                                animateButton();
-                                                // Navigate to success page
+                                                setState(() {
+                                                  if (_state == 0) {
+                                                    animateButton();
+                                                  }
+                                                });
                                                 _auth.currentUser().then((value) =>
                                                 Firestore.instance.collection(widget.databaseName).document(value.uid).get()
                                                     .then((DocumentSnapshot result) =>
@@ -495,21 +523,12 @@ class _LoginScreenState extends State<LoginScreen>
                                                 Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home))):
                                                 Navigator.push(context, MaterialPageRoute(builder: (context) => CompleteRegistration(isNumber:false,data:email,container: widget.container,)))));
                                               } else {
-                                                final errorMsg = AuthExceptionHandler.generateExceptionMessage(
-                                                    status);
-                                                _showSackbar(errorMsg);
-                                                print("sackbar"+errorMsg);
+                                                final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
                                                 setState(() {
                                                   _state = 0;
                                                 });
                                               }
-                                            setState(() {
-                                              if (_state == 0) {
-                                                animateButton();
-                                              }
-                                            });}
-                                        }catch(e){
-                                        }
+                                            }
                                       },
                                       splashColor: Colors.blue,
                                       highlightColor: Colors.blue,
@@ -896,6 +915,7 @@ class _LoginScreenState extends State<LoginScreen>
       }
     }catch(e){
       print('Exception @createAccount: $e');
+      showError(context,e);
       _status = AuthExceptionHandler.handleException(e);
     }
     return _status;
