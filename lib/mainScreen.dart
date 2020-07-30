@@ -8,6 +8,7 @@ import 'package:firebase_login_register/exception_Handaler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   final Widget appIcon;
@@ -47,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   int _state;
   final formKeyReg = GlobalKey<FormState>();
   final formKey = GlobalKey<FormState>();
+  final formKeyReset = GlobalKey<FormState>();
   final _auth = FirebaseAuth.instance;
   AuthResultStatus _status;
   PageController _controller = new PageController(initialPage: 1, viewportFraction: 1.0);
@@ -61,51 +63,54 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     bool send = false;
     String email;
     AlertDialog alert = AlertDialog(
-      title: Text("We will send you password reset link"),
+      title: Text("We will send you password reset link",maxLines:1,),
       content: Padding(
         padding: const EdgeInsets.symmetric(vertical:5.0),
-        child: TextFormField(
-          obscureText: false,
-          decoration: new InputDecoration(
-            prefixIcon: new Icon(Icons.person,color:Colors.white),
-            labelText: 'Email',
-            labelStyle: TextStyle(color: Colors.white),
-            fillColor: Colors.white12,
-            filled: true,
-            border: new OutlineInputBorder(
-                borderRadius: new BorderRadius.circular(25.0),
-                borderSide: new BorderSide(
-                  color: Colors.white,
-                )),
-            focusedBorder: new OutlineInputBorder(
-                borderRadius: new BorderRadius.circular(25.0),
-                borderSide: new BorderSide(
-                  color: Colors.white,
-                )),
-            enabledBorder: new OutlineInputBorder(
-                borderRadius: new BorderRadius.circular(25.0),
-                borderSide: new BorderSide(
-                  color: Colors.white,
-                )),
-          ),
-          validator: (val) {
-            Pattern pattern =
-                r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
-            RegExp regex = new RegExp(pattern);
-            if (!regex.hasMatch(val)) {
-              return 'Email format is invalid';
-            } else {
-              return null;
-            }
-          },
-          onChanged: (value) {
-            email = value; //get the value entered by user.
-          },
-          keyboardType: TextInputType.emailAddress,
-          style: new TextStyle(
-            height: 1.0,
-            fontSize: 14,
-            fontFamily: "Poppins",
+        child: Form(
+          key: formKeyReset,
+          child: TextFormField(
+            obscureText: false,
+            decoration: new InputDecoration(
+              prefixIcon: new Icon(Icons.person,color:Colors.redAccent),
+              labelText: 'Email',
+              labelStyle: TextStyle(color: Colors.black),
+              fillColor: widget.backgroundColor.withOpacity(0.3),
+              filled: true,
+              border: new OutlineInputBorder(
+                  borderRadius: new BorderRadius.circular(25.0),
+                  borderSide: new BorderSide(
+                    color: Colors.redAccent,
+                  )),
+              focusedBorder: new OutlineInputBorder(
+                  borderRadius: new BorderRadius.circular(25.0),
+                  borderSide: new BorderSide(
+                    color: Colors.redAccent,
+                  )),
+              enabledBorder: new OutlineInputBorder(
+                  borderRadius: new BorderRadius.circular(25.0),
+                  borderSide: new BorderSide(
+                    color: Colors.redAccent,
+                  )),
+            ),
+            validator: (val) {
+              Pattern pattern =
+                  r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+              RegExp regex = new RegExp(pattern);
+              if (!regex.hasMatch(val)) {
+                return 'Email format is invalid';
+              } else {
+                return null;
+              }
+            },
+            onChanged: (value) {
+              email = value; //get the value entered by user.
+            },
+            keyboardType: TextInputType.emailAddress,
+            style: new TextStyle(
+              height: 1.0,
+              fontSize: 14,
+              fontFamily: "Poppins",
+            ),
           ),
         ),
       ),
@@ -114,24 +119,26 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             children:[
               FlatButton(
                 onPressed: () {
-                  resetPassword(email, context);
-                  setState(() {
-                    send = true;
-                  });
-                }, child: null,
+                  if (formKeyReset.currentState.validate()) {
+                    resetPassword(email, context);
+                    setState(() {
+                      send = true;
+                    });
+                  }
+                  }, child: Text("Send"),
               ),
               FlatButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: null,
+                child: Text("Close"),
               )
             ]
         ):FlatButton(
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: null,
+          child: Text("Done"),
         )
       ],
     );
@@ -211,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             child: PageView(
               controller: _controller,
               physics: new AlwaysScrollableScrollPhysics(),
-              children: <Widget>[loginPage(), home(), signUpPage()],
+              children: <Widget>[loginPage(context), home(), signUpPage()],
               scrollDirection: Axis.horizontal,
             )),
       ),
@@ -470,7 +477,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       ),
     );
   }
-  Widget loginPage() {
+  Widget loginPage(context) {
     var width = MediaQuery.of(context).size.width;
     return Container(
       alignment: Alignment.center,
@@ -543,6 +550,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 style: new TextStyle(
                                   height: 1.0,
                                   fontSize: 14,
+                                  color: Colors.white,
                                   fontFamily: "Poppins",
                                 ),
                               ),
@@ -587,6 +595,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 style: new TextStyle(
                                   height: 1.0,
                                   fontSize: 14,
+                                  color: Colors.white,
                                   fontFamily: "Poppins",
                                 ),
                               ),
@@ -613,7 +622,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                                 Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreenMain(home:widget.home,user:result))):
                                                 Navigator.push(context, MaterialPageRoute(builder: (context) => Registration(isNumber:false,data:email,container: widget.container,)))));
                                           } else {
-                                           //final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
+                                            //final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
                                             setState(() {
                                               _state = 0;
                                             });
@@ -671,8 +680,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               Container(
                 width: width*0.55,
                 padding: EdgeInsets.symmetric(vertical:width*0.02),
-                child :GestureDetector(
-                  onTap: (){},
+                child :FlatButton(
+                  color: Colors.transparent,
+                  onPressed: (){
+                    showReset(context);
+                  },
                   child: Text(
                     "Forgot Password ? ",
                     textAlign: TextAlign.center,
@@ -762,6 +774,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 style: new TextStyle(
                                   height: 1.0,
                                   fontSize: 14,
+                                  color: Colors.white,
                                   fontFamily: "Poppins",
                                 ),
                               ),
@@ -865,31 +878,31 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                     child :InkWell(
                                       borderRadius: BorderRadius.circular(30),
                                       onTap: () async{
-                                          if (formKeyReg.currentState.validate()) {
-                                            if (password == confPassword) {
+                                        if (formKeyReg.currentState.validate()) {
+                                          if (password == confPassword) {
+                                            setState(() {
+                                              _state = 1;
+                                            });
+                                            final status = await signUpEmail(email,password,context);
+                                            if (status == AuthResultStatus.successful) {
+                                              _auth.currentUser().then((value) =>
+                                                  Firestore.instance.collection(widget.databaseName).document(value.uid).setData({
+                                                    "CompleteRegister":false,
+                                                  }).then((value) =>
+                                                      Navigator.push(context, MaterialPageRoute(
+                                                          builder: (context) => Registration(isNumber:false,data:email,container: widget.container,)))
+                                                  )
+                                              );
+                                            } else {
+                                              // final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
                                               setState(() {
-                                                _state = 1;
+                                                _state = 0;
                                               });
-                                              final status = await signUpEmail(email,password,context);
-                                              if (status == AuthResultStatus.successful) {
-                                                _auth.currentUser().then((value) =>
-                                                    Firestore.instance.collection(widget.databaseName).document(value.uid).setData({
-                                                      "CompleteRegister":false,
-                                                    }).then((value) =>
-                                                        Navigator.push(context, MaterialPageRoute(
-                                                            builder: (context) => Registration(isNumber:false,data:email,container: widget.container,)))
-                                                    )
-                                                );
-                                              } else {
-                                               // final errorMsg = AuthExceptionHandler.generateExceptionMessage(status);
-                                                setState(() {
-                                                  _state = 0;
-                                                });
-                                              }
-                                            }else{
-                                              showError(context, 'Password and Confirm password did not match');
                                             }
+                                          }else{
+                                            showError(context, 'Password and Confirm password did not match');
                                           }
+                                        }
                                       },
                                       splashColor: Colors.blue,
                                       highlightColor: Colors.blue,
@@ -899,7 +912,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                           borderRadius: BorderRadius.circular(30),
                                         ),
                                         child: Center(
-                                          child:(_state!=0)?Text(
+                                          child:(_state==0)?Text(
                                             "Sign Up",
                                             style: const TextStyle(
                                               color: Colors.purple,
@@ -1129,6 +1142,17 @@ class Registration extends StatefulWidget {
   _RegistrationState createState() => _RegistrationState();
 }
 class _RegistrationState extends State<Registration> {
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  setData()async{
+    final SharedPreferences prefs = await _prefs;
+    prefs.setBool("isNumber", widget.isNumber);
+    prefs.setString("data", widget.data);
+  }
+  @override
+  void initState() {
+
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return widget.container;
