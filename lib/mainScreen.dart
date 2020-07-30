@@ -845,7 +845,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     );
   }
   gotoSignup() {
-    //controller_minus1To0.reverse(from: 0.0);
     _controller.animateToPage(
       2,
       duration: Duration(milliseconds: 800),
@@ -865,7 +864,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       }
     }catch(e){
       print('Exception @createAccount: $e');
-      showError(context,e);
+      showError(context,e.message);
       setState(() {
         _state = 0;
       });
@@ -883,7 +882,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       }
     }catch(e){
       print('Exception @createAccount: $e');
-      showError(context,e);
+      showError(context,e.message );
       setState(() {
         _state = 0;
       });
@@ -931,7 +930,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       }
     }catch(e){
       print('Exception @createAccount: $e');
-      showError(context,e);
+      showError(context,e.message);
       setState(() {
         _state = 0;
       });
@@ -956,7 +955,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       }
     }catch(e){
       print('Exception @createAccount: $e');
-      showError(context,e);
+      showError(context,e.message);
       setState(() {
         _state = 0;
       });
