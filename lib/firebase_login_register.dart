@@ -15,6 +15,10 @@ class Auth extends StatefulWidget {
   final AssetImage backgroundImageAsset;
   final Widget completeRegisterPage;
   final Widget homePage;
+  final backgroundColor;
+  final bool enableGoogleFacebook;
+  final Color accentColor;
+  final onFacebookTap;
 
 
   Auth({ Key key,
@@ -27,7 +31,11 @@ class Auth extends StatefulWidget {
     this.emailImage,
     this.backgroundImageAsset,
     this.completeRegisterPage,
-    this.homePage
+    this.homePage,
+    this.backgroundColor = Colors.redAccent,
+    this.enableGoogleFacebook = true,
+    this.accentColor = Colors.red,
+    this.onFacebookTap,
   }) : super(key: key);
 
 
@@ -54,6 +62,10 @@ class _SplashPageState extends State<Auth> with TickerProviderStateMixin {
               backgroundImageAsset: widget.backgroundImageAsset,
               container: widget.completeRegisterPage,
               home: widget.homePage,
+              backgroundColor:widget.backgroundColor,
+              enableGoogleFacebook:widget.enableGoogleFacebook,
+              accentColor:widget.accentColor,
+              onFacebooktap:widget.onFacebookTap,
             )),)}
       else
         {

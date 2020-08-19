@@ -22,6 +22,8 @@ class LoginScreen extends StatefulWidget {
   final onFacebooktap;
   final home;
   final Color backgroundColor;
+  final bool enableGoogleFacebook;
+  final accentColor;
 
   const LoginScreen({Key key,
     this.appIcon,
@@ -34,7 +36,9 @@ class LoginScreen extends StatefulWidget {
     this.container,
     this.home,
     this.onFacebooktap,
-    this.backgroundColor = Colors.redAccent,
+    this.backgroundColor,
+    this.enableGoogleFacebook,
+    this.accentColor,
   }): super(key: key);
   @override
   _LoginScreenState createState() => new _LoginScreenState();
@@ -71,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           child: TextFormField(
             obscureText: false,
             decoration: new InputDecoration(
-              prefixIcon: new Icon(Icons.person,color:Colors.redAccent),
+              prefixIcon: new Icon(Icons.person,color:widget.accentColor),
               labelText: 'Email',
               labelStyle: TextStyle(color: Colors.black),
               fillColor: widget.backgroundColor.withOpacity(0.3),
@@ -79,17 +83,17 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               border: new OutlineInputBorder(
                   borderRadius: new BorderRadius.circular(25.0),
                   borderSide: new BorderSide(
-                    color: Colors.redAccent,
+                    color: widget.accentColor,
                   )),
               focusedBorder: new OutlineInputBorder(
                   borderRadius: new BorderRadius.circular(25.0),
                   borderSide: new BorderSide(
-                    color: Colors.redAccent,
+                    color:widget.accentColor,
                   )),
               enabledBorder: new OutlineInputBorder(
                   borderRadius: new BorderRadius.circular(25.0),
                   borderSide: new BorderSide(
-                    color: Colors.redAccent,
+                    color:widget.accentColor,
                   )),
             ),
             validator: (val) {
@@ -125,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       send = true;
                     });
                   }
-                  }, child: Text("Send"),
+                }, child: Text("Send"),
               ),
               FlatButton(
                 onPressed: () {
@@ -369,12 +373,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 "VERIFY",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                    color: Colors.redAccent,
+                                    color:widget.accentColor,
                                     fontWeight: FontWeight.bold),):Text(
                                 "SEND OTP",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                    color: Colors.redAccent,
+                                    color:widget.accentColor,
                                     fontWeight: FontWeight.bold),)),
                         ],
                       ),
@@ -384,7 +388,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               ],
             ),
           ),
-          Container(
+          (widget.enableGoogleFacebook==true)?Container(
             child: Column(
               children: [
                 Container(
@@ -472,6 +476,45 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   ),
                 ),
               ],
+            ),
+          ):Container(
+            child:Container(
+              width: MediaQuery.of(context).size.width,
+              margin: const EdgeInsets.only(left: 30.0, right: 30.0, top:10.0,bottom: 20),
+              alignment: Alignment.center,
+              child: new Row(
+                children: <Widget>[
+                  new Expanded(
+                    child: new FlatButton(
+                      shape: new RoundedRectangleBorder(
+                          borderRadius: new BorderRadius.circular(30.0)),
+                      color: Colors.white,
+                      onPressed: () {
+                        gotoLogin();
+                      },
+                      child: new Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 20.0,
+                          horizontal: 20.0,
+                        ),
+                        child: new Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            new Expanded(
+                                child:Text(
+                                  "USE EMAIL",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color:widget.accentColor,
+                                      fontWeight: FontWeight.bold))
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           )
         ],
@@ -630,8 +673,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                           }
                                         }
                                       },
-                                      splashColor: Colors.blue,
-                                      highlightColor: Colors.blue,
+                                      splashColor:widget.accentColor,
+                                      highlightColor:widget.accentColor,
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.white,
@@ -640,8 +683,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                         child: Center(
                                           child:(_state==0)?Text(
                                             "Login",
-                                            style: const TextStyle(
-                                              color: Colors.purple,
+                                            style: TextStyle(
+                                              color:widget.accentColor,
                                               fontSize: 16.0,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -905,8 +948,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                           }
                                         }
                                       },
-                                      splashColor: Colors.blue,
-                                      highlightColor: Colors.blue,
+                                      splashColor:widget.accentColor,
+                                      highlightColor:widget.accentColor,
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.white,
@@ -915,8 +958,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                         child: Center(
                                           child:(_state==0)?Text(
                                             "Sign Up",
-                                            style: const TextStyle(
-                                              color: Colors.purple,
+                                            style: TextStyle(
+                                              color:widget.accentColor,
                                               fontSize: 16.0,
                                               fontWeight: FontWeight.bold,
                                             ),
