@@ -1,6 +1,6 @@
 name: firebase_login_register
 description: Firebase login register & complete register 
-version: 0.0.1
+version: 1.0.0
 author: SanuInfotech
 homepage: https://github.com/shantanu850/firebase_full_login_register/
 
@@ -17,7 +17,6 @@ dependencies:
   cloud_firestore: ^0.13.7
   firebase_storage: ^3.1.6
   google_sign_in: ^4.5.1
-  shared_preferences: ^0.5.8
 
 
 

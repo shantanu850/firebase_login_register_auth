@@ -8,7 +8,6 @@ import 'package:firebase_login_register/exception_Handaler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   final Widget appIcon;
@@ -1186,12 +1185,6 @@ class Registration extends StatefulWidget {
   _RegistrationState createState() => _RegistrationState();
 }
 class _RegistrationState extends State<Registration> {
-  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  setData()async{
-    final SharedPreferences prefs = await _prefs;
-    prefs.setBool("isNumber", widget.isNumber);
-    prefs.setString("data", widget.data);
-  }
   @override
   void initState() {
 
