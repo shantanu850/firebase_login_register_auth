@@ -738,28 +738,29 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   ),
                 ),
               ),
-              Container(
-                width: width*0.55,
-                padding: EdgeInsets.symmetric(vertical:width*0.02),
-                child :FlatButton(
-                  color: Colors.transparent,
-                  onPressed: (){
-                    _controller.animateToPage(
-                      2,
-                      duration: Duration(milliseconds: 800),
-                      curve: Curves.bounceOut,
-                    );
-                  },
-                  child: Row(
+              GestureDetector(
+                onTap: () {
+                  _controller.animateToPage(
+                    2,
+                    duration: Duration(milliseconds: 800),
+                    curve: Curves.easeInOutExpo,
+                  );
+                },
+                child:Container(
+                  margin: EdgeInsets.symmetric(horizontal:25,vertical: 10),
+                  alignment: Alignment.center,
+                  height:50,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child:Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Icon(Icons.phone,color:Colors.white),
-                      Text(
-                        "  Use Phone",
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
+                      Icon(Icons.phone,color:Colors.white,),
+                      SizedBox(width:5),
+                      Text("Use Phone",style: TextStyle(color:Colors.white,fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -1023,28 +1024,29 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   ),
                 ),
               ),
-              Container(
-                width: width*0.55,
-                padding: EdgeInsets.symmetric(vertical:width*0.02),
-                child :FlatButton(
-                  color: Colors.transparent,
-                  onPressed: (){
-                    _controller.animateToPage(
-                      2,
-                      duration: Duration(milliseconds: 800),
-                      curve: Curves.bounceOut,
-                    );
-                  },
-                  child: Row(
+              GestureDetector(
+                onTap: () {
+                  _controller.animateToPage(
+                    2,
+                    duration: Duration(milliseconds: 800),
+                    curve: Curves.easeInOutExpo,
+                  );
+                },
+                child:Container(
+                  margin: EdgeInsets.symmetric(horizontal:25,vertical: 10),
+                  alignment: Alignment.center,
+                  height:50,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child:Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Icon(Icons.phone,color:Colors.white),
-                      Text(
-                        "  Use Phone",
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
+                      Icon(Icons.phone,color:Colors.white,),
+                      SizedBox(width:5),
+                      Text("Use Phone",style: TextStyle(color:Colors.white,fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
