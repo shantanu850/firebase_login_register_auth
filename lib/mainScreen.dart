@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   final formKeyReset = GlobalKey<FormState>();
   final _auth = FirebaseAuth.instance;
   AuthResultStatus _status;
-  PageController _controller = new PageController(initialPage: 1, viewportFraction: 1.0);
+  PageController _controller = new PageController(initialPage:2, viewportFraction: 1.0);
   @override
   void initState() {
     _state = 0;
@@ -221,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             child: PageView(
               controller: _controller,
               physics: new AlwaysScrollableScrollPhysics(),
-              children: <Widget>[loginPage(context), home(), signUpPage()],
+              children: <Widget>[forgotPassword(),loginPage(context), home(), signUpPage()],
               scrollDirection: Axis.horizontal,
             )),
       ),
@@ -487,7 +487,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     child: new FlatButton(
                       shape: new RoundedRectangleBorder(
                           borderRadius: new BorderRadius.circular(30.0)),
-                      color: Colors.white,
                       onPressed: () {
                         gotoLogin();
                       },
@@ -504,7 +503,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                   "USE EMAIL",
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                      color:widget.accentColor,
+                                      color:Colors.white,
                                       fontWeight: FontWeight.bold))
                             ),
                           ],
@@ -524,7 +523,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     var width = MediaQuery.of(context).size.width;
     return Container(
       alignment: Alignment.center,
-      color: Colors.blueGrey.withOpacity(0.3),
       child: new ListView(
         padding: const EdgeInsets.all(0.0),
         children: <Widget>[
@@ -726,7 +724,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 child :FlatButton(
                   color: Colors.transparent,
                   onPressed: (){
-                    showReset(context);
+                    _controller.animateToPage(
+                      0,
+                      duration: Duration(milliseconds: 800),
+                      curve: Curves.bounceOut,
+                    );
                   },
                   child: Text(
                     "Forgot Password ? ",
@@ -748,7 +750,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     var width = MediaQuery.of(context).size.width;
     return Container(
       alignment: Alignment.center,
-      color: Colors.blueGrey.withOpacity(0.3),
       child: new ListView(
         padding: const EdgeInsets.all(0.0),
         children: <Widget>[
@@ -1003,19 +1004,131 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       ),
     );
   }
+  Widget forgotPassword(){
+    return Container(
+        padding: EdgeInsets.symmetric(vertical:50),
+        child: ListView(
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 30,vertical: 6),
+              child: Text("Forgot Password",style: TextStyle(color:Colors.white,fontSize:24,fontWeight: FontWeight.bold),textAlign:TextAlign.start,),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 30,vertical: 6),
+              child: Text("We just need your register e-mail ID to send reset link",style: TextStyle(color:Colors.white70,fontSize:14,fontWeight: FontWeight.bold),textAlign:TextAlign.start,),
+            ),
+            Container(
+              margin: EdgeInsets.symmetric(horizontal:25,vertical: 15),
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 5.0),
+                child: TextFormField(
+                  obscureText: false,
+                  decoration: new InputDecoration(
+                    prefixIcon: new Icon(Icons.email,
+                        color: Colors.white),
+                    labelText: 'E-Mail',
+                    labelStyle: TextStyle(color: Colors.white),
+                    fillColor: Colors.white12,
+                    filled: true,
+                    border: new OutlineInputBorder(
+                        borderRadius:
+                        new BorderRadius.circular(25.0),
+                        borderSide: new BorderSide(
+                          color: Colors.white,
+                        )),
+                    enabledBorder: new OutlineInputBorder(
+                        borderRadius: new BorderRadius.circular(25.0),
+                        borderSide: new BorderSide(
+                          color: Colors.white,
+                        )),
+                    focusedBorder: new OutlineInputBorder(
+                        borderRadius: new BorderRadius.circular(25.0),
+                        borderSide: new BorderSide(
+                          color:Colors.white,
+                        )),
+                  ),
+                  validator: (val) {
+                    Pattern pattern =
+                        r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+                    RegExp regex = new RegExp(pattern);
+                    if (!regex.hasMatch(val)) {
+                      return 'Email format is invalid';
+                    } else {
+                      return null;
+                    }
+                  },
+
+                  keyboardType: TextInputType.emailAddress,
+                  style: new TextStyle(
+                    height: 1.0,
+                    fontSize: 14,
+                    color: Colors.white,
+                    fontFamily: "Poppins",
+                  ),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: (){
+                resetPassword(email, context);
+              },
+              child:Container(
+                margin: EdgeInsets.symmetric(horizontal:25),
+                alignment: Alignment.center,
+                height:50,
+                decoration: BoxDecoration(
+                  color:Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child:Text("Reset Password",style: TextStyle(color:widget.accentColor),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                _controller.animateToPage(
+                  3,
+                  duration: Duration(milliseconds: 800),
+                  curve: Curves.easeInOutExpo,
+                );
+              },
+              child:Container(
+                margin: EdgeInsets.symmetric(horizontal:25,vertical: 10),
+                alignment: Alignment.center,
+                height:50,
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child:Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.phone,color:Colors.white,),
+                    SizedBox(width:5),
+                    Text("Use Phone",style: TextStyle(color:Colors.white,fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+  }
 
   ///layout swap controller
   gotoLogin() {
     //controller_0To1.forward(from: 0.0);
     _controller.animateToPage(
-      0,
+      1,
       duration: Duration(milliseconds: 800),
       curve: Curves.bounceOut,
     );
   }
   gotoSignUp() {
     _controller.animateToPage(
-      2,
+      3,
       duration: Duration(milliseconds: 800),
       curve: Curves.bounceOut,
     );
