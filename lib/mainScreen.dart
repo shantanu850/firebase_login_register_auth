@@ -237,13 +237,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       child: ListView(
         children: <Widget>[
           Container(
-            padding: EdgeInsets.only(top:height*0.2),
             child: Center(
               child: widget.appIcon,
             ),
           ),
           Container(
-            padding: EdgeInsets.only(top: 20.0),
             child:  Center(
               child: widget.appName,
             ),
@@ -740,6 +738,33 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   ),
                 ),
               ),
+              Container(
+                width: width*0.55,
+                padding: EdgeInsets.symmetric(vertical:width*0.02),
+                child :FlatButton(
+                  color: Colors.transparent,
+                  onPressed: (){
+                    _controller.animateToPage(
+                      2,
+                      duration: Duration(milliseconds: 800),
+                      curve: Curves.bounceOut,
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Icon(Icons.phone,color:Colors.white),
+                      Text(
+                        "  Use Phone",
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -998,6 +1023,33 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   ),
                 ),
               ),
+              Container(
+                width: width*0.55,
+                padding: EdgeInsets.symmetric(vertical:width*0.02),
+                child :FlatButton(
+                  color: Colors.transparent,
+                  onPressed: (){
+                    _controller.animateToPage(
+                      2,
+                      duration: Duration(milliseconds: 800),
+                      curve: Curves.bounceOut,
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Icon(Icons.phone,color:Colors.white),
+                      Text(
+                        "  Use Phone",
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -1087,7 +1139,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             GestureDetector(
               onTap: () {
                 _controller.animateToPage(
-                  3,
+                  2,
                   duration: Duration(milliseconds: 800),
                   curve: Curves.easeInOutExpo,
                 );
